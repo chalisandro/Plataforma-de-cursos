@@ -8,6 +8,9 @@ cargarEventListeners();
 function cargarEventListeners() {
     // Agregar curso al carrito
     listaCursos.addEventListener('click', agregarCurso)
+
+    //Elimina cursos del carrito
+    carrito.addEventListener('click', eliminarCurso)
 }
 
 // funciones
@@ -19,11 +22,31 @@ function agregarCurso(e) {
         leerDatosCurso(cursoSeleccionado);
     }
 }
+// Eliminar o reducir la cantidad de un curso del carrito
+function eliminarCurso(e) {
+    if (e.target.classList.contains('borrar-curso')) {
+        const cursoId = e.target.getAttribute('data-id');
+
+        // Encontrar el curso en el carrito
+        const curso = articulosCarrito.find(curso => curso.id === cursoId);
+        
+        // Si la cantidad del curso es mayor a 1, solo restamos 1 de la cantidad
+        if (curso.cantidad > 1) {
+            curso.cantidad--;
+        } else {
+            // Si la cantidad es 1, eliminamos el curso del carrito
+            articulosCarrito = articulosCarrito.filter(curso => curso.id !== cursoId);
+        }
+
+        // Actualizar la vista
+        carritoHtml();
+    }
+}
+
 
 // Extraer informacion del curso
 function leerDatosCurso(curso) {
-
-    //crear un objeto con el contenido del curso actual
+    // Crear un objeto con el contenido del curso actual usando desestructuración
     const infoCurso = {
         imagen: curso.querySelector('img').src,
         titulo: curso.querySelector('h4').textContent,
@@ -32,11 +55,22 @@ function leerDatosCurso(curso) {
         id: curso.querySelector('a').getAttribute('data-id'),
         cantidad: 1
     }
-    // agregar elementos al carrito
-    articulosCarrito = [...articulosCarrito, infoCurso];
-    console.log(articulosCarrito);
+
+    // Revisar si el curso ya existe en el carrito
+    const cursoExistente = articulosCarrito.find(curso => curso.id === infoCurso.id);
+
+    if (cursoExistente) {
+        // Si el curso ya está en el carrito, solo incrementamos la cantidad
+        cursoExistente.cantidad++;
+    } else {
+        // Si no existe, agregamos el curso al carrito
+        articulosCarrito.push(infoCurso);
+    }
+
+    // Actualizar el carrito en la UI
     carritoHtml();
 }
+
 
 // muestra el carrito de compras en el html
 
@@ -46,19 +80,17 @@ function carritoHtml() {
     limpiarHtml();
     //recorre el carrito y genere el html
     articulosCarrito.forEach((curso) => {
+        const { imagen, titulo, precio, cantidad, id } = curso
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
-                <img src = "${curso.imagen}" >
+                <img src = "${imagen}" >
             </td>
-            <td>
-                ${curso.titulo}
-            </td>
-            <td>
-                ${curso.precio}
-            </td>
-            <td>
-                ${curso.cantidad}
+            <td> ${titulo} </td>
+            <td> ${precio} </td>
+            <td> ${cantidad} </td>
+            <td> 
+                <a href="#" class="borrar-curso" data-id="${id}"> Quitar </a>
             </td>
         `;
         //agrega el html al tbody
